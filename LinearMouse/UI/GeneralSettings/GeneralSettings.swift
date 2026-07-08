@@ -6,25 +6,27 @@ import LaunchAtLogin
 import SwiftUI
 
 struct GeneralSettings: View {
-    @Default(.showInMenuBar) var showInMenuBar
+    @Default(.menuBarVisibilityMode) var menuBarVisibilityMode
     @Default(.menuBarBatteryDisplayMode) var menuBarBatteryDisplayMode
     @Default(.showInDock) var showInDock
+    @Default(.showPointerLocation) var showPointerLocation
+    @Default(.pointerLocationTriggerModifier) var pointerLocationTriggerModifier
     @Default(.bypassEventsFromOtherApplications) var bypassEventsFromOtherApplications
 
     var body: some View {
         DetailView(schemeSpecific: false) {
             Form {
                 Section {
-                    Toggle(isOn: $showInMenuBar.animation()) {
-                        withDescription {
-                            Text("Show in menu bar")
-                            if !showInMenuBar {
-                                Text("To show the settings, launch \(LinearMouse.appName) again.")
-                            }
-                        }
+                    Picker(selection: $menuBarVisibilityMode.animation()) {
+                        Text("Always").tag(MenuBarVisibilityMode.always)
+                        Text("When needed").tag(MenuBarVisibilityMode.whenAttentionNeeded)
+                        Text("Never").tag(MenuBarVisibilityMode.never)
+                    } label: {
+                        Text("Show in menu bar")
                     }
+                    .modifier(PickerViewModifier())
 
-                    if showInMenuBar {
+                    if menuBarVisibilityMode != .never {
                         Picker("Show current battery", selection: $menuBarBatteryDisplayMode.animation()) {
                             Text("Off").tag(MenuBarBatteryDisplayMode.off)
                             batteryThresholdText(5).tag(MenuBarBatteryDisplayMode.below5)
@@ -46,6 +48,26 @@ struct GeneralSettings: View {
                 Section {
                     LaunchAtLogin.Toggle {
                         Text("Start at login")
+                    }
+                }
+                .modifier(SectionViewModifier())
+
+                Section {
+                    Toggle(isOn: $showPointerLocation.animation()) {
+                        withDescription {
+                            Text("Show pointer location")
+                            Text("Press \(pointerLocationTriggerModifier.label) twice to reveal the pointer.")
+                        }
+                    }
+
+                    if showPointerLocation {
+                        Picker("Trigger", selection: $pointerLocationTriggerModifier.animation()) {
+                            ForEach(PointerLocationTriggerModifier.allCases) { modifier in
+                                Text(modifier.label).tag(modifier)
+                            }
+                        }
+                        .padding(.leading, 20)
+                        .modifier(PickerViewModifier())
                     }
                 }
                 .modifier(SectionViewModifier())
